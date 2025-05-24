@@ -1,0 +1,2 @@
+﻿# BepInEx Configuration Generator
+

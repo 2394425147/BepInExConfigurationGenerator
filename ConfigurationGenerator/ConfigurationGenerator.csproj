@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <IsPackable>false</IsPackable>
+        <IsPackable>true</IsPackable>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
 
@@ -11,7 +11,15 @@
         <IsRoslynComponent>true</IsRoslynComponent>
 
         <RootNamespace>ConfigurationGenerator</RootNamespace>
-        <PackageId>ConfigurationGenerator</PackageId>
+        <PackageId>BepInExConfigurationGenerator</PackageId>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>0.0.1</Version>
+        <Title>BepInEx Configuration Generator</Title>
+        <Authors>fumiko_239</Authors>
+        <Description>An incremental source generator for creating BepInEx-based mods.</Description>
+        <PackageProjectUrl>https://github.com/2394425147/BepInExConfigurationGenerator </PackageProjectUrl>
+        <PackageLicenseUrl>https://raw.githubusercontent.com/2394425147/BepInExConfigurationGenerator/refs/heads/master/LICENSE.md</PackageLicenseUrl>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     </PropertyGroup>
 
     <ItemGroup>
