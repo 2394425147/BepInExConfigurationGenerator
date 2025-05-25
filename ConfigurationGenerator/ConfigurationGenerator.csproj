@@ -10,22 +10,29 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IsRoslynComponent>true</IsRoslynComponent>
 
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+
         <RootNamespace>ConfigurationGenerator</RootNamespace>
         <PackageId>BepInExConfigurationGenerator</PackageId>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.0.1</Version>
+        <Version>0.0.2</Version>
         <Title>BepInEx Configuration Generator</Title>
         <Authors>fumiko_239</Authors>
         <Description>An incremental source generator for creating BepInEx-based mods.</Description>
         <PackageProjectUrl>https://github.com/2394425147/BepInExConfigurationGenerator </PackageProjectUrl>
-        <PackageLicenseUrl>https://raw.githubusercontent.com/2394425147/BepInExConfigurationGenerator/refs/heads/master/LICENSE.md</PackageLicenseUrl>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" PrivateAssets="all" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="..\LICENSE.md" Pack="true" PackagePath="" />
+        <None Include="..\README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
 
 </Project>
