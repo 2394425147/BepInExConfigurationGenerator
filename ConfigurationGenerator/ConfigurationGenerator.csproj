@@ -15,7 +15,7 @@
         <RootNamespace>ConfigurationGenerator</RootNamespace>
         <PackageId>BepInExConfigurationGenerator</PackageId>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.0.3</Version>
+        <Version>0.1.0</Version>
         <Title>BepInEx Configuration Generator</Title>
         <Authors>fumiko_239</Authors>
         <Description>An incremental source generator for creating BepInEx-based mods.</Description>

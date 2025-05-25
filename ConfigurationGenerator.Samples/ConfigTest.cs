@@ -1,13 +1,15 @@
 ﻿using BepInEx.Configuration.Generators;
+using BepInEx.Unity.Mono.Configuration;
+using UnityEngine;
 
 namespace ConfigurationGenerator.Samples;
 
 [GenerateConfig]
 public static partial class ConfigTest
 {
-    [Entry("Test", "Test1", 0, "Description")]
-    public static partial int Test { get; }
+    [Entry("General", "Test", "An integer config")]
+    private static readonly int Test = 0;
 
-    [Entry("Test", "Test 2", (short)1321, "Another test")]
-    public static partial short Test2 { get; }
+    [Entry("General", "Keyboard shortcut", "A keyboard shortcut config (Custom type registered in TomlTypeConverter)")]
+    private static readonly KeyboardShortcut TestKeyboardShortcut = new(KeyCode.H, KeyCode.LeftControl);
 }

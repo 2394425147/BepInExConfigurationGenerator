@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
@@ -34,10 +37,10 @@ public class ConfigGenerator : IIncrementalGenerator
 
                                                       namespace {{Namespace}}
                                                       {
-                                                          [System.AttributeUsage(System.AttributeTargets.Property)]
+                                                          [System.AttributeUsage(System.AttributeTargets.Field)]
                                                           public class {{EntryAttributeName}} : System.Attribute
                                                           {
-                                                              public {{EntryAttributeName}}(string section, string key, object defaultValue, string description)
+                                                              public {{EntryAttributeName}}(string section, string key, string description)
                                                               {
                                                               }
                                                           }
@@ -80,7 +83,8 @@ public class ConfigGenerator : IIncrementalGenerator
         foreach (var attributeListSyntax in classDeclarationSyntax.AttributeLists)
         foreach (var attributeSyntax in attributeListSyntax.Attributes)
         {
-            if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+            if (ModelExtensions.GetSymbolInfo(context.SemanticModel, attributeSyntax).Symbol is not IMethodSymbol
+                attributeSymbol)
                 continue; // if we can't get the symbol, ignore it
 
             var attributeName = attributeSymbol.ContainingType.ToDisplayString();
@@ -110,7 +114,7 @@ public class ConfigGenerator : IIncrementalGenerator
             var semanticModel = compilation.GetSemanticModel(classDeclarationSyntax.SyntaxTree);
 
             // Symbols allow us to get the compile-time information.
-            if (semanticModel.GetDeclaredSymbol(classDeclarationSyntax) is not INamedTypeSymbol classSymbol)
+            if (ModelExtensions.GetDeclaredSymbol(semanticModel, classDeclarationSyntax) is not INamedTypeSymbol classSymbol)
                 continue;
 
             var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
@@ -119,50 +123,39 @@ public class ConfigGenerator : IIncrementalGenerator
             var className = classDeclarationSyntax.Identifier.Text;
 
             // Find all properties annotated with any attribute in this namespace.
-            var properties = classSymbol.GetMembers()
-                                        .OfType<IPropertySymbol>()
-                                        .Where(p => p.SetMethod is null && p.GetMethod is not null)
-                                        .Where(p => p.IsPartialDefinition)
-                                        .Select(p => (symbol: p,
-                                                      attribute: p.GetAttributes()
-                                                                  .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() ==
-                                                                                      $"{Namespace}.{EntryAttributeName}")))
-                                        .Where(a => a.attribute != null)
-                                        .ToList();
+            var fields = classSymbol.GetMembers()
+                                    .OfType<IFieldSymbol>()
+                                    .Where(p => p.IsReadOnly)
+                                    .Select(p => (symbol: p,
+                                                  attribute: p.GetAttributes()
+                                                              .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() ==
+                                                                                   $"{Namespace}.{EntryAttributeName}")))
+                                    .Where(a => a is { attribute: not null })
+                                    .ToList();
 
             // Implement these partial properties, and backing fields for each property.
-            var memberDefinitions = new List<string>(properties.Count);
-            var memberBindings    = new List<string>(properties.Count);
+            var memberDefinitions = new List<string>(fields.Count);
+            var memberBindings    = new List<string>(fields.Count);
 
-            foreach (var (symbol, attribute) in properties)
+            foreach (var (symbol, attribute) in fields)
             {
                 // Get the fields inside the entry attribute.
-                var section      = attribute!.ConstructorArguments[0];
-                var key          = attribute.ConstructorArguments[1];
-                var defaultValue = attribute.ConstructorArguments[2];
-                var description  = attribute.ConstructorArguments[3];
-
-                if (defaultValue.Type!.Name != symbol.Type.Name)
-                    continue;
+                var section     = attribute!.ConstructorArguments[0];
+                var key         = attribute.ConstructorArguments[1];
+                var description = attribute.ConstructorArguments[2];
 
                 memberDefinitions.Add($"""
                                            /// <summary>
                                            /// {description.Value}
                                            /// </summary>
-                                           /// <value>
-                                           /// Default: {defaultValue.Value}
-                                           /// </value>
-                                           public static partial {symbol.Type.ToDisplayString()} {symbol.Name} => _{symbol.Name}.Value;
-                                           private static BepInEx.Configuration.ConfigEntry<{symbol.Type.ToDisplayString()}> _{symbol.Name};
-                                           
-                                           /// <summary>
-                                           /// Get the backing <see cref="BepInEx.Configuration.ConfigEntry"/> for <see cref="{symbol.Name}"/>
-                                           /// </summary>
-                                           public static BepInEx.Configuration.ConfigEntry<{symbol.Type.ToDisplayString()}> Get{symbol.Name}Entry() => _{symbol.Name};
+                                           /// <remarks>
+                                           /// Uses default value specified by <see cref="{symbol.Name}"/>
+                                           /// </remarks>
+                                           public static BepInEx.Configuration.ConfigEntry<{symbol.Type.ToDisplayString()}> {symbol.Name}Config;
                                        """);
 
                 memberBindings.Add(
-                    $"""        _{symbol.Name} = configFile.Bind<{symbol.Type.ToDisplayString()}>("{section.Value}", "{key.Value}", {defaultValue.Value}, "{description.Value}");"""
+                    $"""        {symbol.Name}Config = configFile.Bind<{symbol.Type.ToDisplayString()}>("{section.Value}", "{key.Value}", {symbol.Name}, "{description.Value}");"""
                 );
             }
 

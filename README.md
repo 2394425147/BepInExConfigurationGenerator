@@ -19,8 +19,7 @@ public static partial class MyConfig
 }
 ```
 
-To create a new configuration entry, add a new read-only property.
-Add the `[Entry]` attribute to the property, and mark the property as `static partial`.
+To create a new configuration entry, add a new static readonly field with the `[Entry]` attribute to the property.
 
 ```cs
 using BepInEx.Configuration.Generators;
@@ -28,8 +27,11 @@ using BepInEx.Configuration.Generators;
 [GenerateConfig]
 public static partial class MyConfig
 {
-   [Entry("Section", "Key", 0, "Description")]
-   public static partial int Test { get; } 
+    [Entry("General", "Test", "An integer config")]
+    private static readonly int Test = 0; // 0 is the default value.
+    
+    [Entry("General", "Keyboard shortcut", "A keyboard shortcut config (Custom type registered in TomlTypeConverter)")]
+    private static readonly KeyboardShortcut TestKeyboardShortcut = new(KeyCode.H, KeyCode.LeftControl);
 }
 ```
 
@@ -49,8 +51,8 @@ public sealed class Plugin : BaseUnityPlugin
 }
 ```
 
-You can then read from the entry as usual. 
+You can then read from the entries. 
 
 ```cs
-Debug.Log(ConfigTest.Test);
+Debug.Log(ConfigTest.TestConfig); // The generated entries append the `Config` suffix.
 ```
