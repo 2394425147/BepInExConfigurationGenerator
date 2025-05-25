@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -104,23 +103,6 @@ public class ConfigGenerator : IIncrementalGenerator
     private static void GenerateCode(SourceProductionContext                context, Compilation compilation,
                                      ImmutableArray<ClassDeclarationSyntax> classDeclarations)
     {
-        var supportedTypes = new HashSet<string>()
-        {
-            nameof(String),
-            nameof(Boolean),
-            nameof(Byte),
-            nameof(SByte),
-            nameof(Int16),
-            nameof(UInt16),
-            nameof(Int32),
-            nameof(UInt32),
-            nameof(Int64),
-            nameof(UInt64),
-            nameof(Single),
-            nameof(Double),
-            nameof(Decimal)
-        };
-
         // Go through all filtered class declarations.
         foreach (var classDeclarationSyntax in classDeclarations)
         {
@@ -140,7 +122,6 @@ public class ConfigGenerator : IIncrementalGenerator
             var properties = classSymbol.GetMembers()
                                         .OfType<IPropertySymbol>()
                                         .Where(p => p.SetMethod is null && p.GetMethod is not null)
-                                        .Where(p => supportedTypes.Contains(p.Type.Name) || p.Type.TypeKind == TypeKind.Enum)
                                         .Where(p => p.IsPartialDefinition)
                                         .Select(p => (symbol: p,
                                                       attribute: p.GetAttributes()
